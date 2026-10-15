@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Body Fat Calculator — Pain Free Club</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #faf9f6;
+      --surface: #ffffff;
+      --fg: #1c1917;
+      --fg-dim: #78716c;
+      --accent: #1a5c45;
+      --accent-light: rgba(26,92,69,0.07);
+      --red: #b91c1c;
+      --border: #e7e5e0;
+      --gold: #a37e2c;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    html {
+      height: 100%;
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Inter', -apple-system, system-ui, sans-serif;
+      padding: var(--safe-top) 20px var(--safe-bottom);
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100%;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding-block: 28px;
+    }
+    .screen.active { display: flex; }
+
+    /* ——— HEADER ——— */
+    .header {
+      text-align: center;
+      padding: 20px 0 28px;
+    }
+    .header-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-light);
+      border: 1px solid rgba(26,92,69,0.12);
+      border-radius: 20px;
+      padding: 6px 14px;
+      margin-bottom: 16px;
+    }
+    .header h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(24px, 6.5vw, 34px);
+      line-height: 1.25;
+      font-weight: 400;
+    }
+    .header p {
+      font-size: 14px;
+      color: var(--fg-dim);
+      line-height: 1.6;
+      margin-top: 10px;
+      max-width: 360px;
+      margin-inline: auto;
+    }
+
+    /* ——— FORM ——— */
+    .calc-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-bottom: 8px;
+    }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--fg-dim);
+      letter-spacing: 0.02em;
+    }
+
+    .toggle {
+      display: flex;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .toggle button {
+      flex: 1;
+      padding: 14px 8px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--fg-dim);
+      background: var(--surface);
+      border: none;
+      cursor: pointer;
+      -webkit-appearance: none;
+      touch-action: manipulation;
+      transition: background 0.15s, color 0.15s;
+    }
+    .toggle button.sel {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .inline-fields { display: flex; gap: 8px; }
+    .inline-fields .input-wrap { flex: 1; }
+
+    .input-wrap {
+      position: relative;
+    }
+    .input-wrap input {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 15px 16px;
+      padding-right: 50px;
+      font-family: inherit;
+      font-size: 16px;
+      color: var(--fg);
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .input-wrap input:focus { border-color: var(--accent); }
+    .input-wrap input::placeholder { color: #b0ada8; }
+    .unit {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: var(--fg-dim);
+      pointer-events: none;
+    }
+
+    .hint-toggle {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      background: none;
+      border: none;
+      font-family: inherit;
+      padding: 2px 0 0;
+      -webkit-appearance: none;
+      touch-action: manipulation;
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--fg-dim);
+      line-height: 1.55;
+      background: var(--accent-light);
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: left;
+      display: none;
+      margin-top: 4px;
+    }
+    .hint.show { display: block; }
+    .hint strong { color: var(--fg); }
+
+    .hip-field { display: none; }
+    .hip-field.show { display: flex; }
+
+    .err { font-size: 13px; color: var(--red); min-height: 20px; text-align: center; }
+
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 16px 24px;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      -webkit-appearance: none;
+      touch-action: manipulation;
+    }
+    .btn:active { opacity: 0.88; transform: scale(0.99); }
+
+    /* ——— RESULT ——— */
+    .result-screen {
+      padding-top: 20px;
+      gap: 0;
+    }
+
+    .result-card {
+      text-align: center;
+      border-radius: 16px;
+      padding: 32px 20px;
+      margin-bottom: 20px;
+    }
+    .result-card.level-fit { background: #eef6f2; color: #14392a; }
+    .result-card.level-avg { background: #fdf3e3; color: #3d2500; }
+    .result-card.level-high { background: #fef2f2; color: #7f1d1d; }
+
+    .result-pct {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 56px;
+      font-weight: 600;
+      line-height: 1;
+    }
+    .result-pct-label {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 4px;
+      opacity: 0.7;
+    }
+    .result-category {
+      font-size: 18px;
+      font-weight: 600;
+      margin-top: 12px;
+    }
+
+    .result-bar-wrap {
+      margin-top: 20px;
+      padding: 0 4px;
+    }
+    .result-bar {
+      width: 100%;
+      height: 10px;
+      border-radius: 5px;
+      background: linear-gradient(to right, #22c55e 0%, #22c55e 28%, #eab308 28%, #eab308 52%, #f97316 52%, #f97316 76%, #ef4444 76%, #ef4444 100%);
+      opacity: 0.35;
+      position: relative;
+    }
+    .result-marker {
+      position: absolute;
+      top: -5px;
+      width: 6px;
+      height: 20px;
+      border-radius: 3px;
+      background: currentColor;
+    }
+    .result-bar-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: 600;
+      opacity: 0.5;
+      margin-top: 6px;
+      padding: 0 2px;
+    }
+
+    /* Breakdown */
+    .breakdown {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .breakdown-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .breakdown-val {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .breakdown-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--fg-dim);
+      margin-top: 2px;
+    }
+
+    /* Ranges table */
+    .ranges {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
+    }
+    .ranges-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      margin-bottom: 10px;
+      color: var(--fg);
+    }
+    .ranges table { width: 100%; border-collapse: collapse; }
+    .ranges td {
+      font-size: 13px;
+      padding: 5px 0;
+      color: var(--fg-dim);
+    }
+    .ranges td:first-child { font-weight: 500; color: var(--fg); }
+    .ranges td:last-child { text-align: right; }
+    .ranges tr.you td {
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* Waist risk */
+    .waist-alert {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #991b1b;
+      margin-bottom: 20px;
+    }
+    .waist-alert strong { font-weight: 700; }
+
+    /* Insight */
+    .insight {
+      background: var(--accent-light);
+      border: 1px solid rgba(26,92,69,0.12);
+      border-radius: 12px;
+      padding: 16px 18px;
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--fg);
+      margin-bottom: 20px;
+    }
+    .insight strong { color: var(--accent); }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 8px 0 20px;
+      font-size: 12px;
+      color: var(--fg-dim);
+      line-height: 1.5;
+    }
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 1.5px solid var(--accent);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 14px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      -webkit-appearance: none;
+      touch-action: manipulation;
+      margin-bottom: 12px;
+    }
+    .btn-outline:active { opacity: 0.85; }
+
+    @supports (-webkit-touch-callout: none) {
+      input { font-size: 16px !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="screen active" id="calcScreen">
+  <div class="header">
+    <div class="header-badge">Pain Free Club</div>
+    <h1>Body Fat Calculator</h1>
+    <p>Know your real body fat percentage using the U.S. Navy method — more accurate than BMI alone.</p>
+  </div>
+
+  <div class="calc-form">
+    <div class="field">
+      <div class="field-label">Gender</div>
+      <div class="toggle" id="genderToggle">
+        <button class="sel" onclick="setGender('male',this)">Male</button>
+        <button onclick="setGender('female',this)">Female</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Age</div>
+      <div class="input-wrap">
+        <input type="number" id="age" placeholder="e.g. 55" inputmode="numeric">
+        <span class="unit">yrs</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Height</div>
+      <div class="inline-fields">
+        <div class="input-wrap">
+          <input type="number" id="feet" placeholder="5" inputmode="numeric">
+          <span class="unit">ft</span>
+        </div>
+        <div class="input-wrap">
+          <input type="number" id="inch" placeholder="4" inputmode="numeric">
+          <span class="unit">in</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Weight</div>
+      <div class="input-wrap">
+        <input type="number" id="weight" placeholder="e.g. 72" inputmode="decimal">
+        <span class="unit">kg</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Neck circumference</div>
+      <div class="input-wrap">
+        <input type="number" id="neck" placeholder="e.g. 15" inputmode="decimal" step="0.5">
+        <span class="unit">inches</span>
+      </div>
+      <button class="hint-toggle" onclick="toggleHint('neckHint')">How do I measure this? ↓</button>
+      <div class="hint" id="neckHint">
+        Stand straight and look ahead. Wrap a tape measure around your <strong>neck just below the Adam's apple</strong> (the bump in the middle of your throat). Keep it snug — you should be able to slide one finger under it.<br><br>
+        <strong>No tape measure?</strong> Use a string or dupatta, mark where it meets, then measure the length against a ruler or your phone screen (most phones are about 6 inches long).
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Waist (around navel)</div>
+      <div class="input-wrap">
+        <input type="number" id="waist" placeholder="e.g. 36" inputmode="decimal" step="0.5">
+        <span class="unit">inches</span>
+      </div>
+      <button class="hint-toggle" onclick="toggleHint('waistHint')">How do I measure this? ↓</button>
+      <div class="hint" id="waistHint">
+        Stand up and breathe out normally. Wrap the tape around your <strong>bare belly at your navel</strong> (belly button). Keep it level all the way around — don't pull tight. Read the number in inches.
+      </div>
+    </div>
+
+    <div class="field hip-field" id="hipField">
+      <div class="field-label">Hip (widest part)</div>
+      <div class="input-wrap">
+        <input type="number" id="hip" placeholder="e.g. 40" inputmode="decimal" step="0.5">
+        <span class="unit">inches</span>
+      </div>
+      <button class="hint-toggle" onclick="toggleHint('hipHint')">How do I measure this? ↓</button>
+      <div class="hint" id="hipHint">
+        Stand with your feet together. Wrap the tape around the <strong>widest part of your hips and buttocks</strong>. Keep it level and snug. Read the number in inches.
+      </div>
+    </div>
+  </div>
+
+  <div class="err" id="err"></div>
+  <button class="btn" onclick="calculate()">Calculate My Body Fat →</button>
+
+  <div class="footer" style="margin-top: 20px;">
+    Uses the U.S. Navy method (Hodgdon & Beckett, 1984).<br>
+    Categories from the American Council on Exercise.
+  </div>
+</div>
+
+<div class="screen result-screen" id="resultScreen"></div>
+
+<script>
+let gender = 'male';
+
+function setGender(g, btn) {
+  gender = g;
+  document.querySelectorAll('#genderToggle button').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  document.getElementById('hipField').classList.toggle('show', g === 'female');
+}
+
+function toggleHint(id) {
+  document.getElementById(id).classList.toggle('show');
+}
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function calculate() {
+  const age = parseFloat(document.getElementById('age').value);
+  const ft = parseFloat(document.getElementById('feet').value) || 0;
+  const inc = parseFloat(document.getElementById('inch').value) || 0;
+  const wt = parseFloat(document.getElementById('weight').value);
+  const nk = parseFloat(document.getElementById('neck').value);
+  const ws = parseFloat(document.getElementById('waist').value);
+  const hp = parseFloat(document.getElementById('hip').value) || 0;
+  const err = document.getElementById('err');
+
+  if (!age || age < 15 || age > 100) { err.textContent = 'Please enter a valid age.'; return; }
+  if (ft < 3 || ft > 8) { err.textContent = 'Please enter a valid height.'; return; }
+  if (!wt || wt < 20 || wt > 250) { err.textContent = 'Please enter a valid weight in kg.'; return; }
+  if (!nk || nk < 8 || nk > 30) { err.textContent = 'Please enter a valid neck measurement.'; return; }
+  if (!ws || ws < 20 || ws > 70) { err.textContent = 'Please enter a valid waist measurement.'; return; }
+  if (gender === 'female' && (!hp || hp < 25 || hp > 70)) { err.textContent = 'Please enter a valid hip measurement.'; return; }
+  if (ws <= nk) { err.textContent = 'Please check your waist and neck measurements.'; return; }
+  err.textContent = '';
+
+  const heightIn = (ft * 12) + inc;
+  const heightCm = heightIn * 2.54;
+  const waistCm = ws * 2.54;
+  const neckCm = nk * 2.54;
+  const hipCm = hp * 2.54;
+
+  // U.S. Navy Method (Hodgdon & Beckett, 1984)
+  let bf;
+  if (gender === 'male') {
+    bf = 495 / (1.0324 - 0.19077 * Math.log10(waistCm - neckCm) + 0.15456 * Math.log10(heightCm)) - 450;
+  } else {
+    bf = 495 / (1.29579 - 0.35004 * Math.log10(waistCm + hipCm - neckCm) + 0.22100 * Math.log10(heightCm)) - 450;
+  }
+  bf = Math.max(3, Math.min(60, bf));
+  bf = Math.round(bf * 10) / 10;
+
+  const heightM = heightCm / 100;
+  const bmi = Math.round(wt / (heightM * heightM) * 10) / 10;
+  const fatMass = Math.round(wt * bf / 100 * 10) / 10;
+  const leanMass = Math.round((wt - fatMass) * 10) / 10;
+
+  // Waist risk
+  let waistRisk = false;
+  if (gender === 'male' && ws > 40) waistRisk = true;
+  if (gender === 'female' && ws > 35) waistRisk = true;
+
+  // ACE categories
+  let cat, level;
+  const ranges = gender === 'male'
+    ? [['Essential Fat','2–5%',5],['Athletic','6–13%',13],['Fit','14–17%',17],['Average','18–24%',24],['Above Average','25%+',100]]
+    : [['Essential Fat','10–13%',13],['Athletic','14–20%',20],['Fit','21–24%',24],['Average','25–31%',31],['Above Average','32%+',100]];
+
+  for (const r of ranges) {
+    if (bf <= r[2]) { cat = r[0]; break; }
+  }
+
+  if (cat === 'Athletic' || cat === 'Fit' || cat === 'Essential Fat') level = 'fit';
+  else if (cat === 'Average') level = 'avg';
+  else level = 'high';
+
+  // Ideal BF (Jackson & Pollock)
+  let ideal;
+  if (gender === 'male') ideal = age <= 30 ? '10–15%' : age <= 50 ? '13–18%' : '15–20%';
+  else ideal = age <= 30 ? '18–23%' : age <= 50 ? '20–25%' : '22–28%';
+
+  showResult({ bf, bmi, fatMass, leanMass, cat, level, waistRisk, ws, ranges, ideal, age });
+}
+
+function showResult(d) {
+  const el = document.getElementById('resultScreen');
+
+  // Bar position (scale: 3% to 45%)
+  const barPos = Math.min(95, Math.max(3, ((d.bf - 3) / 42) * 100));
+
+  let insight;
+  if (d.level === 'fit') {
+    insight = `Your body fat is in the <strong>healthy range</strong>. Keep doing what you're doing — consistent movement and good nutrition are clearly working for you.`;
+  } else if (d.level === 'avg') {
+    insight = `Your body fat is in the <strong>average range</strong>. You're not in a danger zone, but a structured nutrition and strength plan can move you into the fit category — reducing joint stress and improving energy.`;
+  } else {
+    insight = `Your body fat is <strong>above the healthy range</strong>. This puts extra load on your joints, affects your energy, and increases health risks over time. A guided plan for nutrition, movement, and accountability can change this.`;
+  }
+
+  let html = '';
+
+  // Result card
+  html += `<div class="result-card level-${d.level}">`;
+  html += `<div class="result-pct">${d.bf}%</div>`;
+  html += `<div class="result-pct-label">Body Fat</div>`;
+  html += `<div class="result-category">${d.cat}</div>`;
+  html += `<div class="result-bar-wrap"><div class="result-bar"><div class="result-marker" style="left:${barPos}%"></div></div>`;
+  html += `<div class="result-bar-labels"><span>Lean</span><span>Fit</span><span>Average</span><span>High</span></div></div>`;
+  html += `</div>`;
+
+  // Breakdown
+  html += `<div class="breakdown">`;
+  html += `<div class="breakdown-item"><div class="breakdown-val">${d.fatMass} kg</div><div class="breakdown-label">Fat Mass</div></div>`;
+  html += `<div class="breakdown-item"><div class="breakdown-val">${d.leanMass} kg</div><div class="breakdown-label">Lean Mass</div></div>`;
+  html += `<div class="breakdown-item"><div class="breakdown-val">${d.bmi}</div><div class="breakdown-label">BMI</div></div>`;
+  html += `<div class="breakdown-item"><div class="breakdown-val">${d.ideal}</div><div class="breakdown-label">Ideal for Age ${d.age}</div></div>`;
+  html += `</div>`;
+
+  // Waist risk
+  if (d.waistRisk) {
+    html += `<div class="waist-alert"><strong>Waist circumference alert:</strong> Your waist (${d.ws}") is above the recommended limit (${gender === 'male' ? '40"' : '35"'} for ${gender === 'male' ? 'men' : 'women'}). High waist circumference is linked to increased risk of heart disease, type 2 diabetes, and metabolic conditions — independent of overall body fat.</div>`;
+  }
+
+  // Insight
+  html += `<div class="insight">${insight}</div>`;
+
+  // Ranges table
+  html += `<div class="ranges">`;
+  html += `<div class="ranges-title">Body Fat Categories (${gender === 'male' ? 'Men' : 'Women'})</div>`;
+  html += `<table>`;
+  for (const r of d.ranges) {
+    const isYou = r[0] === d.cat;
+    html += `<tr${isYou ? ' class="you"' : ''}><td>${r[0]}${isYou ? ' ← You' : ''}</td><td>${r[1]}</td></tr>`;
+  }
+  html += `</table></div>`;
+
+  // Actions
+  html += `<button class="btn-outline" onclick="show('calcScreen')">Recalculate</button>`;
+
+  html += `<div class="footer">`;
+  html += `U.S. Navy method (Hodgdon & Beckett, 1984). Categories: American Council on Exercise. Ideal ranges: Jackson & Pollock.<br><br>`;
+  html += `Built by <a href="https://painfreeclub.com" target="_blank" rel="noopener">Pain Free Club</a>`;
+  html += `</div>`;
+
+  el.innerHTML = html;
+  show('resultScreen');
+}
+</script>
+
+</body>
+</html>
