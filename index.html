@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <meta name="theme-color" content="#faf9f6">
+  <meta name="theme-color" content="#395CA5">
   <title>Body Fat Calculator — Pain Free Club</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap">
   <style>
@@ -14,11 +14,12 @@
       --surface: #ffffff;
       --fg: #1c1917;
       --fg-dim: #78716c;
-      --accent: #1a5c45;
-      --accent-light: rgba(26,92,69,0.07);
+      --accent: #395CA5;
+      --accent-light: rgba(57,92,165,0.07);
       --red: #b91c1c;
       --border: #e7e5e0;
-      --gold: #a37e2c;
+      --gold: #395CA5;
+      --navy: #1D2E53;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
@@ -63,7 +64,7 @@
       text-transform: uppercase;
       color: var(--accent);
       background: var(--accent-light);
-      border: 1px solid rgba(26,92,69,0.12);
+      border: 1px solid rgba(57,92,165,0.12);
       border-radius: 20px;
       padding: 6px 14px;
       margin-bottom: 16px;
@@ -214,7 +215,7 @@
       padding: 32px 20px;
       margin-bottom: 20px;
     }
-    .result-card.level-fit { background: #eef6f2; color: #14392a; }
+    .result-card.level-fit { background: #edf1f8; color: #1D2E53; }
     .result-card.level-avg { background: #fdf3e3; color: #3d2500; }
     .result-card.level-high { background: #fef2f2; color: #7f1d1d; }
 
@@ -341,7 +342,7 @@
     /* Insight */
     .insight {
       background: var(--accent-light);
-      border: 1px solid rgba(26,92,69,0.12);
+      border: 1px solid rgba(57,92,165,0.12);
       border-radius: 12px;
       padding: 16px 18px;
       font-size: 14px;
@@ -391,7 +392,7 @@
 
 <div class="screen active" id="calcScreen">
   <div class="header">
-    <div class="header-badge">Pain Free Club</div>
+    <img src="pfc-logo.png" alt="Pain Free Club" style="width: 80px; margin-bottom: 12px;">
     <h1>Body Fat Calculator</h1>
     <p>Know your real body fat percentage using the U.S. Navy method — more accurate than BMI alone.</p>
   </div>
