@@ -483,6 +483,36 @@
   </div>
 </div>
 
+<div class="screen" id="leadScreen">
+  <div class="header">
+    <h1 style="font-size: clamp(22px, 5.5vw, 28px);">Your results are ready!</h1>
+    <p>Enter your details below to see your personalised body fat report.</p>
+  </div>
+  <div class="calc-form">
+    <div class="field">
+      <div class="field-label">Full Name</div>
+      <div class="input-wrap">
+        <input type="text" id="leadName" placeholder="e.g. Ramesh Kumar" style="padding-right:16px">
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Email</div>
+      <div class="input-wrap">
+        <input type="email" id="leadEmail" placeholder="e.g. ramesh@gmail.com" inputmode="email" style="padding-right:16px">
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Phone Number</div>
+      <div class="input-wrap">
+        <input type="tel" id="leadPhone" placeholder="e.g. 9876543210" inputmode="tel" style="padding-right:16px">
+      </div>
+    </div>
+  </div>
+  <div class="err" id="leadErr"></div>
+  <button class="btn" onclick="submitLead()">Show My Results →</button>
+  <p style="text-align:center;font-size:11px;color:var(--fg-dim);margin-top:12px;line-height:1.5;">Your information is safe with us and will never be shared.</p>
+</div>
+
 <div class="screen result-screen" id="resultScreen"></div>
 
 <script>
@@ -569,7 +599,43 @@ function calculate() {
   if (gender === 'male') ideal = age <= 30 ? '10–15%' : age <= 50 ? '13–18%' : '15–20%';
   else ideal = age <= 30 ? '18–23%' : age <= 50 ? '20–25%' : '22–28%';
 
-  showResult({ bf, bmi, fatMass, leanMass, cat, level, waistRisk, ws, ranges, ideal, age });
+  window._calcResult = { bf, bmi, fatMass, leanMass, cat, level, waistRisk, ws, ranges, ideal, age };
+  show('leadScreen');
+}
+
+const SHEET_URL = 'GOOGLE_APPS_SCRIPT_URL';
+
+function submitLead() {
+  const name = document.getElementById('leadName').value.trim();
+  const email = document.getElementById('leadEmail').value.trim();
+  const phone = document.getElementById('leadPhone').value.trim();
+  const leadErr = document.getElementById('leadErr');
+
+  if (!name || name.length < 2) { leadErr.textContent = 'Please enter your name.'; return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { leadErr.textContent = 'Please enter a valid email.'; return; }
+  if (!phone || !/^\d{10}$/.test(phone)) { leadErr.textContent = 'Please enter a valid 10-digit phone number.'; return; }
+  leadErr.textContent = '';
+
+  const d = window._calcResult;
+  const payload = {
+    name, email, phone,
+    gender, age: d.age,
+    bodyFat: d.bf, bmi: d.bmi,
+    fatMass: d.fatMass, leanMass: d.leanMass,
+    category: d.cat, waist: d.ws,
+    timestamp: new Date().toISOString()
+  };
+
+  if (SHEET_URL !== 'GOOGLE_APPS_SCRIPT_URL') {
+    fetch(SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  }
+
+  showResult(d);
 }
 
 function showResult(d) {
